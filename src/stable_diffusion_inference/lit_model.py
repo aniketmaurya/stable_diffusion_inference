@@ -22,9 +22,15 @@ UNCONDITIONAL_GUIDANCE_SCALE = 9.0  # SD2 need higher than SD1 (~7.5)
 
 
 def load_model_from_config(
-    config: Any, ckpt: str, verbose: bool = False
+    config: Any, ckpt: str, version:str, verbose: bool = False
 ) -> torch.nn.Module:
-    from sd2.ldm.util import instantiate_from_config
+    if version == "2.0":
+        from sd2.ldm.util import instantiate_from_config
+    
+    elif version.startswith("1."):
+        from sd1.ldm.util import instantiate_from_config
+    else:
+        raise NotImplementedError(f"version={version} not supported. {SUPPORTED_VERSIONS}")
 
     print(f"Loading model from {ckpt}")
     pl_sd = torch.load(ckpt, map_location="cpu")
@@ -51,20 +57,21 @@ class StableDiffusionModule(L.LightningModule):
         checkpoint_path: str,
         version: str
     ):
+        from omegaconf import OmegaConf
         if version == "2.0":
             from sd2.ldm.models.diffusion.ddim import DDIMSampler
-            from omegaconf import OmegaConf
+        
+        elif version.startswith("1."):
+            from sd1.ldm.models.diffusion.ddim import DDIMSampler
         else:
-            raise NotImplementedError(f"version not supported. {SUPPORTED_VERSIONS}")
+            raise NotImplementedError(f"version={version} not supported. {SUPPORTED_VERSIONS}")
 
         super().__init__()
 
         config = OmegaConf.load(f"{config_path}")
         config.model.params.cond_stage_config["params"] = {"device": device}
-        self.model = load_model_from_config(config, f"{checkpoint_path}")
+        self.model = load_model_from_config(config, f"{checkpoint_path}", version=version)
         self.sampler = DDIMSampler(self.model)
-        
-        
 
     @typing.no_type_check
     @torch.inference_mode()
@@ -125,6 +132,7 @@ class SDInference:
         self,
         config_path: str,
         checkpoint_path: str,
+        accelerator: str="auto",
         version="2.0",
     ):
         assert version in SUPPORTED_VERSIONS, f"supported version are {SUPPORTED_VERSIONS}"
@@ -132,7 +140,7 @@ class SDInference:
 
         precision = 16 if torch.cuda.is_available() else 32
         self.trainer = L.Trainer(
-            accelerator="auto",
+            accelerator=accelerator,
             devices=1,
             precision=precision,
             enable_progress_bar=False,
