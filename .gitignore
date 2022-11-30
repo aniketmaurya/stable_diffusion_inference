@@ -314,3 +314,5 @@ github/
 
 node_modules/
 *node_modules/*
+*tar.gz
+sd_weights/

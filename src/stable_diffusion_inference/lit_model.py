@@ -1,4 +1,5 @@
 import typing
+import tarfile
 import os
 import urllib.request
 from functools import partial
@@ -19,6 +20,24 @@ DEFAULT_DEVICE = torch.device("cuda") if torch.cuda.is_available() else torch.de
 
 DOWNSAMPLING_FACTOR = 8
 UNCONDITIONAL_GUIDANCE_SCALE = 9.0  # SD2 need higher than SD1 (~7.5)
+
+
+def download_checkpoints(ckpt_path: str)-> str:
+    "returns the path of model ckpt"
+    dest = os.path.basename(ckpt_path)
+    if ckpt_path.startswith("http"):
+        if not os.path.exists(dest):
+            print("downloading checkpoints. This can take a while...")
+            urllib.request.urlretrieve(ckpt_path, dest)
+        else: print(f"model already exists {dest}")
+
+        if ckpt_path.endswith("tar.gz"):
+            file = tarfile.open(dest)
+            target_file = dest.replace(".tar.gz", "")
+            file.extractall(target_file)
+            return target_file
+        return dest
+    return ckpt_path
 
 
 def load_model_from_config(
@@ -110,18 +129,7 @@ class StableDiffusionModule(L.LightningModule):
         return pil_results
 
 
-SUPPORTED_VERSIONS = {"1.5", "2.0"}
-
-def download_checkpoints(ckpt_path: str)-> str:
-    "returns the path of model ckpt"
-    dest = os.path.basename(ckpt_path)
-    if ckpt_path.startswith("http"):
-        if not os.path.exists(dest):
-            print("downloading checkpoints. This can take a while...")
-            urllib.request.urlretrieve(ckpt_path, dest)
-        else: print(f"model already exists {dest}")
-        return dest
-    return ckpt_path
+SUPPORTED_VERSIONS = {"1.4", "1.5", "2.0"}
 
 
 class SDInference:
@@ -171,3 +179,30 @@ class SDInference:
         if len(pil_results)==1:
             return pil_results[0]
         return pil_results
+
+def create_text2image(sd_variant: str):
+    model = None
+    if sd_variant=="sd1":
+        config_path = "configs/stable-diffusion/v1-inference.yaml"
+        checkpoint_path = "https://pl-public-data.s3.amazonaws.com/dream_stable_diffusion/sd_weights.tar.gz"
+
+        dest = download_checkpoints(checkpoint_path)
+        checkpoint_path = dest + "/sd-v1-4.ckpt"
+
+        model = SDInference(
+            config_path=config_path,
+            checkpoint_path=checkpoint_path,
+            version="1.4"
+            )
+
+    elif sd_variant=="sd2":
+        config_path = "configs/stable-diffusion/v2-inference-v.yaml"
+        checkpoint_path = "https://pl-public-data.s3.amazonaws.com/dream_stable_diffusion/768-v-ema.ckpt"
+
+        model = SDInference(
+            config_path=config_path,
+            checkpoint_path=checkpoint_path,
+            version="2.0"
+            )
+
+    return model
