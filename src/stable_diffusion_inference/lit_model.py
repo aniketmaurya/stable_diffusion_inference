@@ -134,7 +134,7 @@ SUPPORTED_VERSIONS = {"1.4", "1.5", "2.0"}
 
 class SDInference:
     """
-    version: supported version are 1.5 and 2.0
+    version: supported version are 1.4 and 2.0
     """
     def __init__(
         self,
@@ -180,7 +180,7 @@ class SDInference:
             return pil_results[0]
         return pil_results
 
-def create_text2image(sd_variant: str):
+def create_text2image(sd_variant: str, **kwargs):
     model = None
     if sd_variant=="sd1":
         config_path = "configs/stable-diffusion/v1-inference.yaml"
@@ -192,17 +192,29 @@ def create_text2image(sd_variant: str):
         model = SDInference(
             config_path=config_path,
             checkpoint_path=checkpoint_path,
-            version="1.4"
+            version="1.4",
+            **kwargs
             )
 
-    elif sd_variant=="sd2":
+    elif sd_variant=="sd2_high":
         config_path = "configs/stable-diffusion/v2-inference-v.yaml"
         checkpoint_path = "https://pl-public-data.s3.amazonaws.com/dream_stable_diffusion/768-v-ema.ckpt"
 
         model = SDInference(
             config_path=config_path,
             checkpoint_path=checkpoint_path,
-            version="2.0"
+            version="2.0",
+            **kwargs
+            )
+    elif sd_variant=="sd2_base":
+        config_path = "configs/stable-diffusion/v2-inference.yaml"
+        checkpoint_path = "https://pl-public-data.s3.amazonaws.com/dream_stable_diffusion/512-base-ema.ckpt"
+
+        model = SDInference(
+            config_path=config_path,
+            checkpoint_path=checkpoint_path,
+            version="2.0",
+            **kwargs
             )
 
     return model
