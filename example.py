@@ -8,5 +8,5 @@ text2image = SDInference(
     checkpoint_path=checkpoint_path
     )
 
-image = text2image("cats in hats", image_size=512, inference_steps=1)
+image = text2image("cats in hats", image_size=512)
 image.save("cats in hats.png")
