@@ -1,4 +1,6 @@
 import typing
+import os
+import urllib.request
 from functools import partial
 from typing import Any, List
 
@@ -93,6 +95,15 @@ class StableDiffusionModule(LightningModule):
 
 SUPPORTED_VERSIONS = {"1.5", "2.0"}
 
+def download_checkpoints(ckpt_path: str)-> str:
+    "returns the path of model ckpt"
+    dest = os.path.basename(ckpt_path)
+    if ckpt_path.startswith("http"):
+        urllib.request.urlretrieve(ckpt_path, dest)
+        return dest
+    return ckpt_path
+
+
 class Text2Image:
     """
     version: supported version are 1.5 and 2.0
@@ -105,6 +116,7 @@ class Text2Image:
         version="1.5",
     ):
         assert version in SUPPORTED_VERSIONS, f"supported version are {SUPPORTED_VERSIONS}"
+        checkpoint_path = download_checkpoints(checkpoint_path)
         
         self.model = StableDiffusionModule(
             device=device, checkpoint_path=checkpoint_path, config_path=config_path
