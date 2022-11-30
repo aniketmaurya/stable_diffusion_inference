@@ -11,6 +11,9 @@ from PIL import Image
 from torch.utils.data import DataLoader
 
 from .data import PromptDataset
+def clear_cuda():
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
 
 DEFAULT_DEVICE = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
@@ -60,6 +63,8 @@ class StableDiffusionModule(L.LightningModule):
         config.model.params.cond_stage_config["params"] = {"device": device}
         self.model = load_model_from_config(config, f"{checkpoint_path}")
         self.sampler = DDIMSampler(self.model)
+        
+        
 
     @typing.no_type_check
     @torch.inference_mode()
@@ -135,12 +140,18 @@ class SDInference:
 
         device=self.trainer.strategy.root_device.type
         
+        clear_cuda()
         self.model = StableDiffusionModule(
             device=device, checkpoint_path=checkpoint_path, config_path=config_path, version=version
         )
+        if torch.cuda.is_available():
+            self.model = self.model.to(torch.float16)
+        clear_cuda()
         
 
     def __call__(self, prompts: List[str], image_size: int=768, inference_steps:int = 50)-> Image.Image:
+        if isinstance(prompts, str):
+            prompts = [prompts]
         trainer = self.trainer
         model = self.model
 
@@ -149,4 +160,6 @@ class SDInference:
         )
         model.predict_step = partial(model.predict_step, height=image_size, width=image_size, num_inference_steps=inference_steps)
         pil_results = trainer.predict(model, dataloaders=img_dl)[0]
+        if len(pil_results)==1:
+            return pil_results[0]
         return pil_results
