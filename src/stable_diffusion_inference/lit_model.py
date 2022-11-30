@@ -103,8 +103,10 @@ def download_checkpoints(ckpt_path: str)-> str:
     "returns the path of model ckpt"
     dest = os.path.basename(ckpt_path)
     if ckpt_path.startswith("http"):
-        print("downloading checkpoints. This can take a while...")
-        urllib.request.urlretrieve(ckpt_path, dest)
+        if not os.path.exists(dest):
+            print("downloading checkpoints. This can take a while...")
+            urllib.request.urlretrieve(ckpt_path, dest)
+        else: print(f"model already exists {dest}")
         return dest
     return ckpt_path
 
