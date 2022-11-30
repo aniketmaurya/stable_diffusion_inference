@@ -3,16 +3,12 @@
 Simple and easy stable diffusion inference on CPU, GPU, MPS and all the devices supported by Lightning.
 
 ```python
-from stable_diffusion_inference import SDInference
+from stable_diffusion_inference import create_text2image
 
-config_path = "configs/stable-diffusion/v2-inference-v.yaml"
-checkpoint_path = "https://pl-public-data.s3.amazonaws.com/dream_stable_diffusion/768-v-ema.ckpt"
+text2image = create_text2image("sd1")
+# text2image = create_text2image("sd2")  # for SD 2.0
 
-text2image = SDInference(
-    config_path=config_path,
-    checkpoint_path=checkpoint_path
-    )
-
-image = text2image("cats in hats")
+image = text2image("cats in hats", image_size=512, inference_steps=50)
 image.save("cats in hats.png")
+
 ```
