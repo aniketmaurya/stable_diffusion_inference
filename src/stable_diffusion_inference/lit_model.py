@@ -13,6 +13,8 @@ from torch.utils.data import DataLoader
 
 from .data import PromptDataset
 
+DEFAULT_DEVICE = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
 DOWNSAMPLING_FACTOR = 8
 UNCONDITIONAL_GUIDANCE_SCALE = 9.0  # SD2 need higher than SD1 (~7.5)
 
@@ -101,6 +103,7 @@ def download_checkpoints(ckpt_path: str)-> str:
     "returns the path of model ckpt"
     dest = os.path.basename(ckpt_path)
     if ckpt_path.startswith("http"):
+        print("downloading checkpoints. This can take a while...")
         urllib.request.urlretrieve(ckpt_path, dest)
         return dest
     return ckpt_path
@@ -112,9 +115,9 @@ class Text2Image:
     """
     def __init__(
         self,
-        device: torch.device,
         config_path: str,
         checkpoint_path: str,
+        device: torch.device=DEFAULT_DEVICE,
         version="1.5",
     ):
         assert version in SUPPORTED_VERSIONS, f"supported version are {SUPPORTED_VERSIONS}"
