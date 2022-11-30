@@ -45,9 +45,11 @@ class StableDiffusionModule(LightningModule):
         device: torch.device,
         config_path: str,
         checkpoint_path: str,
-    ):
-        from ldm.models.diffusion.ddim import DDIMSampler
-        from omegaconf import OmegaConf
+        version: str
+    ):  
+        if version == "2.0":
+            from sd2.ldm.models.diffusion.ddim import DDIMSampler
+            from omegaconf import OmegaConf
 
         super().__init__()
 
@@ -119,7 +121,7 @@ class Text2Image:
         checkpoint_path = download_checkpoints(checkpoint_path)
         
         self.model = StableDiffusionModule(
-            device=device, checkpoint_path=checkpoint_path, config_path=config_path
+            device=device, checkpoint_path=checkpoint_path, config_path=config_path, version=version
         )
         precision = 16 if torch.cuda.is_available() else 32
         self.trainer = L.Trainer(
