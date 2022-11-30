@@ -111,7 +111,7 @@ def download_checkpoints(ckpt_path: str)-> str:
     return ckpt_path
 
 
-class Text2Image:
+class SDInference:
     """
     version: supported version are 1.5 and 2.0
     """

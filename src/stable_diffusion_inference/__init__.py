@@ -1,1 +1,1 @@
-from .lit_model import Text2Image
+from .lit_model import SDInference
