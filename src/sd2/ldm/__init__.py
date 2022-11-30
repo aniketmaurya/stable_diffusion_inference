@@ -1,4 +1,3 @@
-from ldm import lightning
 from ldm import data
 from ldm import models
 from ldm import modules

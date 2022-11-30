@@ -8,7 +8,6 @@ import lightning as L
 import numpy as np
 import torch
 from PIL import Image
-from pytorch_lightning import LightningModule
 from torch.utils.data import DataLoader
 
 from .data import PromptDataset
@@ -22,7 +21,7 @@ UNCONDITIONAL_GUIDANCE_SCALE = 9.0  # SD2 need higher than SD1 (~7.5)
 def load_model_from_config(
     config: Any, ckpt: str, verbose: bool = False
 ) -> torch.nn.Module:
-    from ldm.util import instantiate_from_config
+    from sd2.ldm.util import instantiate_from_config
 
     print(f"Loading model from {ckpt}")
     pl_sd = torch.load(ckpt, map_location="cpu")
@@ -41,17 +40,19 @@ def load_model_from_config(
     return model
 
 
-class StableDiffusionModule(LightningModule):
+class StableDiffusionModule(L.LightningModule):
     def __init__(
         self,
         device: torch.device,
         config_path: str,
         checkpoint_path: str,
         version: str
-    ):  
+    ):
         if version == "2.0":
             from sd2.ldm.models.diffusion.ddim import DDIMSampler
             from omegaconf import OmegaConf
+        else:
+            raise NotImplementedError(f"version not supported. {SUPPORTED_VERSIONS}")
 
         super().__init__()
 
@@ -119,15 +120,11 @@ class SDInference:
         self,
         config_path: str,
         checkpoint_path: str,
-        device: torch.device=DEFAULT_DEVICE,
-        version="1.5",
+        version="2.0",
     ):
         assert version in SUPPORTED_VERSIONS, f"supported version are {SUPPORTED_VERSIONS}"
         checkpoint_path = download_checkpoints(checkpoint_path)
-        
-        self.model = StableDiffusionModule(
-            device=device, checkpoint_path=checkpoint_path, config_path=config_path, version=version
-        )
+
         precision = 16 if torch.cuda.is_available() else 32
         self.trainer = L.Trainer(
             accelerator="auto",
@@ -135,6 +132,13 @@ class SDInference:
             precision=precision,
             enable_progress_bar=False,
         )
+
+        device=self.trainer.strategy.root_device.type
+        
+        self.model = StableDiffusionModule(
+            device=device, checkpoint_path=checkpoint_path, config_path=config_path, version=version
+        )
+        
 
     def __call__(self, prompts: List[str], image_size: int=768, inference_steps:int = 50)-> Image.Image:
         trainer = self.trainer
