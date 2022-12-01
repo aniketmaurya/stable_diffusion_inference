@@ -11,22 +11,17 @@ import torch
 from PIL import Image
 from torch.utils.data import DataLoader
 
-from .data import PromptDataset
-
 from sd1_inference.ldm.models.diffusion.ddim import DDIMSampler as SD1Sampler
 from sd2_inference.ldm.models.diffusion.ddim import DDIMSampler as SD2Sampler
 
-SAMPLERS = {"1.4": SD1Sampler, "2.0":SD2Sampler}
+from .data import PromptDataset
+
+SAMPLERS = {"1.4": SD1Sampler, "2.0": SD2Sampler}
 
 
 def clear_cuda():
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
-
-
-DEFAULT_DEVICE = (
-    torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-)
 
 DOWNSAMPLING_FACTOR = 8
 UNCONDITIONAL_GUIDANCE_SCALE = 9.0  # SD2 need higher than SD1 (~7.5)
@@ -162,9 +157,12 @@ class SDInference:
             version in SUPPORTED_VERSIONS
         ), f"supported version are {SUPPORTED_VERSIONS}"
         checkpoint_path = download_checkpoints(checkpoint_path)
-        
-        self.use_cuda:bool = torch.cuda.is_available() and accelerator in ("auto", "gpu")
-        precision = 16 if self.use_cuda  else 32
+
+        self.use_cuda: bool = torch.cuda.is_available() and accelerator in (
+            "auto",
+            "gpu",
+        )
+        precision = 16 if self.use_cuda else 32
         self.trainer = L.Trainer(
             accelerator=accelerator,
             devices=1,
@@ -212,7 +210,7 @@ def create_text2image(sd_variant: str, **kwargs):
     model = None
     _ROOT_DIR = os.path.dirname(__file__)
     if sd_variant == "sd1":
-        config_path = f"{_ROOT_DIR}/../../configs/stable-diffusion/v1-inference.yaml"
+        config_path = f"{_ROOT_DIR}/configs/stable-diffusion/v1-inference.yaml"
         checkpoint_path = "https://pl-public-data.s3.amazonaws.com/dream_stable_diffusion/sd_weights.tar.gz"
 
         dest = download_checkpoints(checkpoint_path)
@@ -226,7 +224,7 @@ def create_text2image(sd_variant: str, **kwargs):
         )
 
     elif sd_variant == "sd2_high":
-        config_path = f"{_ROOT_DIR}/../../configs/stable-diffusion/v2-inference-v.yaml"
+        config_path = f"{_ROOT_DIR}/configs/stable-diffusion/v2-inference-v.yaml"
         checkpoint_path = "https://pl-public-data.s3.amazonaws.com/dream_stable_diffusion/768-v-ema.ckpt"
 
         model = SDInference(
@@ -236,7 +234,7 @@ def create_text2image(sd_variant: str, **kwargs):
             **kwargs,
         )
     elif sd_variant == "sd2_base":
-        config_path = f"{_ROOT_DIR}/../../configs/stable-diffusion/v2-inference.yaml"
+        config_path = f"{_ROOT_DIR}/configs/stable-diffusion/v2-inference.yaml"
         checkpoint_path = "https://pl-public-data.s3.amazonaws.com/dream_stable_diffusion/512-base-ema.ckpt"
 
         model = SDInference(
