@@ -50,10 +50,10 @@ def load_model_from_config(
     config: Any, ckpt: str, version: str, verbose: bool = False
 ) -> torch.nn.Module:
     if version == "2.0":
-        from sd2.ldm.util import instantiate_from_config
+        from sd2_inference.ldm.util import instantiate_from_config
 
     elif version.startswith("1."):
-        from sd1.ldm.util import instantiate_from_config
+        from sd1_inference.ldm.util import instantiate_from_config
     else:
         raise NotImplementedError(
             f"version={version} not supported. {SUPPORTED_VERSIONS}"
@@ -83,10 +83,10 @@ class StableDiffusionModule(L.LightningModule):
         from omegaconf import OmegaConf
 
         if version == "2.0":
-            from sd2.ldm.models.diffusion.ddim import DDIMSampler
+            from sd2_inference.ldm.models.diffusion.ddim import DDIMSampler
 
         elif version.startswith("1."):
-            from sd1.ldm.models.diffusion.ddim import DDIMSampler
+            from sd1_inference.ldm.models.diffusion.ddim import DDIMSampler
         else:
             raise NotImplementedError(
                 f"version={version} not supported. {SUPPORTED_VERSIONS}"
