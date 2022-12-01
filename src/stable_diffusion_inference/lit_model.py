@@ -23,6 +23,7 @@ def clear_cuda():
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
 
+
 DOWNSAMPLING_FACTOR = 8
 UNCONDITIONAL_GUIDANCE_SCALE = 9.0  # SD2 need higher than SD1 (~7.5)
 
