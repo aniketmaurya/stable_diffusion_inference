@@ -3,7 +3,7 @@ import tarfile
 import typing
 import urllib.request
 from functools import partial
-from typing import Any, List
+from typing import Any, List, Union
 
 import lightning as L
 import numpy as np
@@ -186,7 +186,7 @@ class SDInference:
 
     def __call__(
         self, prompts: List[str], image_size: int = 768, inference_steps: int = 50
-    ) -> Image.Image:
+    ) -> Union[List[Image.Image], Image.Image]:
         if isinstance(prompts, str):
             prompts = [prompts]
         trainer = self.trainer
