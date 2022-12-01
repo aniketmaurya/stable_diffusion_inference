@@ -1,6 +1,6 @@
 # Easy Stable Diffusion
 
-Simple and easy stable diffusion inference with LightningModule.
+Simple and easy stable diffusion inference with LightningModule on GPU, CPU and MPS (Possibly all devices supported by [Lightning](lightning.ai)).
 
 **To install**
 
