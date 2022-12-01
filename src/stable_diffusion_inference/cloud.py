@@ -8,6 +8,9 @@ class Prompt(BaseModel):
 
 
 class SDServe(PythonServer):
+    def __init__(self, **kwargs):
+        super().__init__(input_type=Prompt, output_type=Image, **kwargs)
+
     def setup(self, *args, **kwargs) -> None:
         from stable_diffusion_inference import create_text2image
         self._model = create_text2image("sd1")
@@ -16,5 +19,4 @@ class SDServe(PythonServer):
         return {"image": self._model(request.prompt)}
 
 
-component = SDServe(input_type=Prompt, output_type=Image)
-app = L.LightningApp(component)
+app = L.LightningApp(SDServe())
