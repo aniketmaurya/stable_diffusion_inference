@@ -157,8 +157,9 @@ class SDInference:
             version in SUPPORTED_VERSIONS
         ), f"supported version are {SUPPORTED_VERSIONS}"
         checkpoint_path = download_checkpoints(checkpoint_path)
-
-        precision = 16 if torch.cuda.is_available() else 32
+        
+        self.use_cuda:bool = torch.cuda.is_available() and accelerator in ("auto", "gpu")
+        precision = 16 if self.use_cuda  else 32
         self.trainer = L.Trainer(
             accelerator=accelerator,
             devices=1,
@@ -175,9 +176,9 @@ class SDInference:
             config_path=config_path,
             version=version,
         )
-        if torch.cuda.is_available():
+        if self.use_cuda:
             self.model = self.model.to(torch.float16)
-        clear_cuda()
+            clear_cuda()
 
     def __call__(
         self, prompts: List[str], image_size: int = 768, inference_steps: int = 50
