@@ -90,7 +90,7 @@ def get_obj_from_str(string, reload=False):
     if reload:
         module_imp = importlib.import_module(module)
         importlib.reload(module_imp)
-    return getattr(importlib.import_module(module, package=None), cls)
+    return getattr(importlib.import_module("sd1_inference." + module, package=None), cls)
 
 
 def _do_parallel_data_prefetch(func, Q, data, idx, idx_to_fn=False):
