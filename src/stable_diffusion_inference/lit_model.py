@@ -205,8 +205,9 @@ class SDInference:
 
 def create_text2image(sd_variant: str, **kwargs):
     model = None
+    _ROOT_DIR = os.path.dirname(__file__)
     if sd_variant == "sd1":
-        config_path = "configs/stable-diffusion/v1-inference.yaml"
+        config_path = f"{_ROOT_DIR}/../../configs/stable-diffusion/v1-inference.yaml"
         checkpoint_path = "https://pl-public-data.s3.amazonaws.com/dream_stable_diffusion/sd_weights.tar.gz"
 
         dest = download_checkpoints(checkpoint_path)
@@ -220,7 +221,7 @@ def create_text2image(sd_variant: str, **kwargs):
         )
 
     elif sd_variant == "sd2_high":
-        config_path = "configs/stable-diffusion/v2-inference-v.yaml"
+        config_path = f"{_ROOT_DIR}/../../configs/stable-diffusion/v2-inference-v.yaml"
         checkpoint_path = "https://pl-public-data.s3.amazonaws.com/dream_stable_diffusion/768-v-ema.ckpt"
 
         model = SDInference(
@@ -230,7 +231,7 @@ def create_text2image(sd_variant: str, **kwargs):
             **kwargs,
         )
     elif sd_variant == "sd2_base":
-        config_path = "configs/stable-diffusion/v2-inference.yaml"
+        config_path = f"{_ROOT_DIR}/../../configs/stable-diffusion/v2-inference.yaml"
         checkpoint_path = "https://pl-public-data.s3.amazonaws.com/dream_stable_diffusion/512-base-ema.ckpt"
 
         model = SDInference(
