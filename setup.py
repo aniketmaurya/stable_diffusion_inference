@@ -16,8 +16,8 @@ setup(
     version="0.0.1",
     description="",
     packages=find_packages(
-        where='src',  # '.' by default
-        include=['stable_diffusion_inference', "sd*"],
+        where="src",  # '.' by default
+        include=["stable_diffusion_inference", "sd*"],
     ),
     package_dir={"": "src"},
     install_requires=_load_requirements(_PATH_ROOT),
