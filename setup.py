@@ -15,7 +15,11 @@ setup(
     name="sd_inference",
     version="0.0.1",
     description="",
+    packages=find_packages(
+        where='src',  # '.' by default
+        include=['stable_diffusion_inference', "sd*"],
+    ),
     package_dir={"": "src"},
-    packages=find_packages(),
     install_requires=_load_requirements(_PATH_ROOT),
+    include_package_data=True,
 )

@@ -2,6 +2,12 @@
 
 Simple and easy stable diffusion inference with LightningModule.
 
+**To install**
+
+```
+pip install "sd_inference@git+https://github.com/aniketmaurya/stable_diffusion_inference@main"
+```
+
 ```python
 from stable_diffusion_inference import create_text2image
 
