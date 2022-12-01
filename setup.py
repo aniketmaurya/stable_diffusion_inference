@@ -16,8 +16,5 @@ setup(
     description='',
     package_dir = {"": "src"},
     packages=find_packages(),
-    install_requires=[
-        'torch',
-    ],
     install_requires=_load_requirements(_PATH_ROOT),
 )
