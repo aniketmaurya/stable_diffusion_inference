@@ -214,7 +214,7 @@ def create_text2image(sd_variant: str, **kwargs):
         checkpoint_path = "https://pl-public-data.s3.amazonaws.com/dream_stable_diffusion/sd_weights.tar.gz"
 
         dest = download_checkpoints(checkpoint_path)
-        checkpoint_path = dest + "/sd-v1-4.ckpt"
+        checkpoint_path = dest + f"/{dest}/sd-v1-4.ckpt"
 
         model = SDInference(
             config_path=config_path,
