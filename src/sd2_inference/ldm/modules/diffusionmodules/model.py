@@ -6,7 +6,7 @@ import numpy as np
 from einops import rearrange
 from typing import Optional, Any
 
-from ldm.modules.attention import MemoryEfficientCrossAttention
+from sd2_inference.ldm.modules.attention import MemoryEfficientCrossAttention
 
 try:
     import xformers
