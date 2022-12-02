@@ -3,7 +3,7 @@ import tarfile
 import typing
 import urllib.request
 from functools import partial
-from typing import Any, List, Union
+from typing import Any, List
 
 import lightning as L
 import numpy as np
@@ -11,8 +11,8 @@ import torch
 from PIL import Image
 from torch.utils.data import DataLoader
 
-from sd1_inference.ldm.models.diffusion.ddim import DDIMSampler as SD1Sampler
-from sd2_inference.ldm.models.diffusion.ddim import DDIMSampler as SD2Sampler
+from ldm1.models.diffusion.ddim import DDIMSampler as SD1Sampler
+from ldm2.models.diffusion.ddim import DDIMSampler as SD2Sampler
 
 from .data import PromptDataset
 
@@ -28,33 +28,52 @@ DOWNSAMPLING_FACTOR = 8
 UNCONDITIONAL_GUIDANCE_SCALE = 9.0  # SD2 need higher than SD1 (~7.5)
 
 
-def download_checkpoints(ckpt_path: str) -> str:
-    "returns the path of model ckpt"
-    dest = os.path.basename(ckpt_path)
+def download_checkpoints(
+    ckpt_path: str,
+    cache_dir: typing.Optional[str] = None,
+    force_download: typing.Optional[bool] = None,
+    ckpt_filename: typing.Optional[str] = None,
+) -> str:
     if ckpt_path.startswith("http"):
-        if not os.path.exists(dest):
-            print("downloading checkpoints. This can take a while...")
-            urllib.request.urlretrieve(ckpt_path, dest)
+        # Ex: pl-public-data.s3.amazonaws.com/dream_stable_diffusion/512-base-ema.ckpt
+        ckpt_url = ckpt_path
+        cache_path = Path(cache_dir) if cache_dir else Path()
+        cache_path.mkdir(parents=True, exist_ok=True)
+        dest = str(cache_path / os.path.basename(ckpt_path))
+        # Ex: ./512-base-ema.ckpt
+        if dest.endswith(".tar.gz"):
+            # Ex: https://pl-public-data.s3.amazonaws.com/dream_stable_diffusion/sd_weights.tar.gz
+            ckpt_folder = dest.replace(".tar.gz", "")  # Ex: ./sd_weights
+            if not ckpt_filename:  # Ex: sd-v1-4.ckpt
+                raise Exception("ckpt_filename must not be None")
+            ckpt_path = str(
+                Path(ckpt_folder) / ckpt_filename
+            )  # Ex: ./sd_weights/sd-v1-4.ckpt
         else:
-            print(f"model already exists {dest}")
-
-        if ckpt_path.endswith("tar.gz"):
-            file = tarfile.open(dest)
-            target_file = dest.replace(".tar.gz", "")
-            file.extractall(target_file)
-            return target_file
-        return dest
-    return ckpt_path
+            ckpt_path = dest  # Ex: ./512-base-ema.ckpt
+        if Path(ckpt_path).exists() and not force_download:
+            return ckpt_path
+        else:
+            print("downloading checkpoints. This can take a while...")
+            urllib.request.urlretrieve(ckpt_url, dest)
+            if dest.endswith(".tar.gz"):
+                file = tarfile.open(dest)
+                file.extractall(cache_path)
+                file.close()
+                os.unlink(dest)
+            return ckpt_path
+    else:
+        return ckpt_path  # Ex: ./sd_weights/sd-v1-4.ckpt
 
 
 def load_model_from_config(
     config: Any, ckpt: str, version: str, verbose: bool = False
 ) -> torch.nn.Module:
     if version == "2.0":
-        from sd2_inference.ldm.util import instantiate_from_config
+        from ldm2.util import instantiate_from_config
 
     elif version.startswith("1."):
-        from sd1_inference.ldm.util import instantiate_from_config
+        from ldm1.util import instantiate_from_config
     else:
         raise NotImplementedError(
             f"version={version} not supported. {SUPPORTED_VERSIONS}"
@@ -143,21 +162,22 @@ SUPPORTED_VERSIONS = {"1.4", "1.5", "2.0"}
 
 
 class SDInference:
-    """
-    version: supported version are 1.4 and 2.0
-    """
-
     def __init__(
         self,
         config_path: str,
         checkpoint_path: str,
+        cache_dir: typing.Optional[str] = None,
+        force_download: typing.Optional[bool] = None,
+        ckpt_filename: typing.Optional[str] = None,
         accelerator: str = "auto",
         version="2.0",
     ):
         assert (
             version in SUPPORTED_VERSIONS
         ), f"supported version are {SUPPORTED_VERSIONS}"
-        checkpoint_path = download_checkpoints(checkpoint_path)
+        checkpoint_path = download_checkpoints(
+            checkpoint_path, cache_dir, force_download, ckpt_filename
+        )
 
         self.use_cuda: bool = torch.cuda.is_available() and accelerator in (
             "auto",
@@ -186,7 +206,7 @@ class SDInference:
 
     def __call__(
         self, prompts: List[str], image_size: int = 768, inference_steps: int = 50
-    ) -> Union[List[Image.Image], Image.Image]:
+    ) -> typing.Union[List[Image.Image], Image.Image]:
         if isinstance(prompts, str):
             prompts = [prompts]
         trainer = self.trainer
@@ -207,20 +227,25 @@ class SDInference:
         return pil_results
 
 
-def create_text2image(sd_variant: str, **kwargs):
+def create_text2image(
+    sd_variant: str,
+    cache_dir: typing.Optional[str] = None,
+    force_download: typing.Optional[bool] = None,
+    **kwargs,
+):
     model = None
     _ROOT_DIR = os.path.dirname(__file__)
     if sd_variant == "sd1":
         config_path = f"{_ROOT_DIR}/configs/stable-diffusion/v1-inference.yaml"
         checkpoint_path = "https://pl-public-data.s3.amazonaws.com/dream_stable_diffusion/sd_weights.tar.gz"
 
-        dest = download_checkpoints(checkpoint_path)
-        checkpoint_path = dest + "/sd-v1-4.ckpt"
-
         model = SDInference(
             config_path=config_path,
             checkpoint_path=checkpoint_path,
             version="1.4",
+            cache_dir=cache_dir,
+            force_download=force_download,
+            ckpt_filename="sd-v1-4.ckpt",
             **kwargs,
         )
 
@@ -231,6 +256,8 @@ def create_text2image(sd_variant: str, **kwargs):
         model = SDInference(
             config_path=config_path,
             checkpoint_path=checkpoint_path,
+            cache_dir=cache_dir,
+            force_download=force_download,
             version="2.0",
             **kwargs,
         )
@@ -241,6 +268,8 @@ def create_text2image(sd_variant: str, **kwargs):
         model = SDInference(
             config_path=config_path,
             checkpoint_path=checkpoint_path,
+            cache_dir=cache_dir,
+            force_download=force_download,
             version="2.0",
             **kwargs,
         )

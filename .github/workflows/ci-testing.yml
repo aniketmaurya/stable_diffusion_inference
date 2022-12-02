@@ -34,6 +34,8 @@ jobs:
           pip --version
           pip install .
           pip install -r requirements.txt --upgrade --quiet --find-links $TORCH_URL
+          pip install -e git+https://github.com/CompVis/taming-transformers.git@master#egg=taming-transformers -q
+          pip install -U "clip@ git+https://github.com/openai/CLIP.git@main" -q
           pip install pytest coverage
           pip list
         shell: bash
@@ -42,7 +44,7 @@ jobs:
         run: |
           coverage run -m pytest tests -v --junitxml=junit/test-results-${{ runner.os }}-${{ matrix.python-version }}.xml
 
-      - name: Statistics
-        if: success()
-        run: |
-          coverage report
+#      - name: Statistics
+#        if: success()
+#        run: |
+#          coverage report
