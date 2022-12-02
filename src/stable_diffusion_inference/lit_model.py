@@ -24,13 +24,17 @@ def clear_cuda():
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
 
+
 DOWNSAMPLING_FACTOR = 8
 UNCONDITIONAL_GUIDANCE_SCALE = 9.0  # SD2 need higher than SD1 (~7.5)
 
 
-def download_checkpoints(ckpt_path: str, cache_dir: typing.Optional[str] = None,
-                         force_download: typing.Optional[bool] = None,
-                         ckpt_filename: typing.Optional[str] = None) -> str:
+def download_checkpoints(
+    ckpt_path: str,
+    cache_dir: typing.Optional[str] = None,
+    force_download: typing.Optional[bool] = None,
+    ckpt_filename: typing.Optional[str] = None,
+) -> str:
     if ckpt_path.startswith("http"):
         # Ex: pl-public-data.s3.amazonaws.com/dream_stable_diffusion/512-base-ema.ckpt
         ckpt_url = ckpt_path
@@ -43,7 +47,9 @@ def download_checkpoints(ckpt_path: str, cache_dir: typing.Optional[str] = None,
             ckpt_folder = dest.replace(".tar.gz", "")  # Ex: ./sd_weights
             if not ckpt_filename:  # Ex: sd-v1-4.ckpt
                 raise Exception("ckpt_filename must not be None")
-            ckpt_path = str(Path(ckpt_folder) / ckpt_filename)  # Ex: ./sd_weights/sd-v1-4.ckpt
+            ckpt_path = str(
+                Path(ckpt_folder) / ckpt_filename
+            )  # Ex: ./sd_weights/sd-v1-4.ckpt
         else:
             ckpt_path = dest  # Ex: ./512-base-ema.ckpt
         if Path(ckpt_path).exists() and not force_download:
@@ -170,7 +176,9 @@ class SDInference:
         assert (
             version in SUPPORTED_VERSIONS
         ), f"supported version are {SUPPORTED_VERSIONS}"
-        checkpoint_path = download_checkpoints(checkpoint_path, cache_dir, force_download, ckpt_filename)
+        checkpoint_path = download_checkpoints(
+            checkpoint_path, cache_dir, force_download, ckpt_filename
+        )
 
         self.use_cuda: bool = torch.cuda.is_available() and accelerator in (
             "auto",
@@ -199,7 +207,7 @@ class SDInference:
 
     def __call__(
         self, prompts: List[str], image_size: int = 768, inference_steps: int = 50
-    ) -> Image.Image:
+    ) -> typing.Union[List[Image.Image], Image.Image]:
         if isinstance(prompts, str):
             prompts = [prompts]
         trainer = self.trainer
@@ -220,8 +228,12 @@ class SDInference:
         return pil_results
 
 
-def create_text2image(sd_variant: str, cache_dir: typing.Optional[str] = None,
-                      force_download: typing.Optional[bool] = None, **kwargs):
+def create_text2image(
+    sd_variant: str,
+    cache_dir: typing.Optional[str] = None,
+    force_download: typing.Optional[bool] = None,
+    **kwargs,
+):
     model = None
     _ROOT_DIR = os.path.dirname(__file__)
     if sd_variant == "sd1":
