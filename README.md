@@ -6,6 +6,8 @@ Simple and easy stable diffusion inference with LightningModule on GPU, CPU and 
 
 ```
 pip install "sd_inference@git+https://github.com/aniketmaurya/stable_diffusion_inference@main"
+
+pip install -e git+https://github.com/CompVis/taming-transformers.git@master#egg=taming-transformers -q
 ```
 
 ```python
