@@ -17,7 +17,7 @@ setup(
     description="",
     packages=find_packages(
         where="src",  # '.' by default
-        include=["stable_diffusion_inference", "sd*"],
+        include=["stable_diffusion_inference", "ldm*"],
     ),
     package_dir={"": "src"},
     install_requires=_load_requirements(_PATH_ROOT),
