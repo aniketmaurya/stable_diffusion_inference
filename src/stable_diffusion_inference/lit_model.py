@@ -11,8 +11,8 @@ import torch
 from PIL import Image
 from torch.utils.data import DataLoader
 
-from sd1_inference.ldm.models.diffusion.ddim import DDIMSampler as SD1Sampler
-from sd2_inference.ldm.models.diffusion.ddim import DDIMSampler as SD2Sampler
+from ldm1.models.diffusion.ddim import DDIMSampler as SD1Sampler
+from ldm2.models.diffusion.ddim import DDIMSampler as SD2Sampler
 
 from .data import PromptDataset
 
@@ -50,10 +50,10 @@ def load_model_from_config(
     config: Any, ckpt: str, version: str, verbose: bool = False
 ) -> torch.nn.Module:
     if version == "2.0":
-        from sd2_inference.ldm.util import instantiate_from_config
+        from ldm2.util import instantiate_from_config
 
     elif version.startswith("1."):
-        from sd1_inference.ldm.util import instantiate_from_config
+        from ldm1.util import instantiate_from_config
     else:
         raise NotImplementedError(
             f"version={version} not supported. {SUPPORTED_VERSIONS}"
