@@ -44,7 +44,7 @@ jobs:
         run: |
           coverage run -m pytest tests -v --junitxml=junit/test-results-${{ runner.os }}-${{ matrix.python-version }}.xml
 
-      - name: Statistics
-        if: success()
-        run: |
-          coverage report
+#      - name: Statistics
+#        if: success()
+#        run: |
+#          coverage report
