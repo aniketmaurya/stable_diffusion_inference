@@ -34,12 +34,13 @@ def download_checkpoints(ckpt_path: str, cache_dir: typing.Optional[str] = None,
     if ckpt_path.startswith("http"):
         # Ex: pl-public-data.s3.amazonaws.com/dream_stable_diffusion/512-base-ema.ckpt
         ckpt_url = ckpt_path
-        dest = str((Path(cache_dir) if cache_dir else Path()) / os.path.basename(ckpt_path))
+        cache_path = Path(cache_dir) if cache_dir else Path()
+        cache_path.mkdir(parents=True, exist_ok=True)
+        dest = str(cache_path / os.path.basename(ckpt_path))
         # Ex: ./512-base-ema.ckpt
         if dest.endswith(".tar.gz"):
             # Ex: https://pl-public-data.s3.amazonaws.com/dream_stable_diffusion/sd_weights.tar.gz
             ckpt_folder = dest.replace(".tar.gz", "")  # Ex: ./sd_weights
-            Path(ckpt_folder).mkdir(parents=True, exist_ok=True)
             if not ckpt_filename:  # Ex: sd-v1-4.ckpt
                 raise Exception("ckpt_filename must not be None")
             ckpt_path = str(Path(ckpt_folder) / ckpt_filename)  # Ex: ./sd_weights/sd-v1-4.ckpt
@@ -52,7 +53,7 @@ def download_checkpoints(ckpt_path: str, cache_dir: typing.Optional[str] = None,
             urllib.request.urlretrieve(ckpt_url, dest)
             if dest.endswith(".tar.gz"):
                 file = tarfile.open(dest)
-                file.extractall(ckpt_folder)
+                file.extractall(cache_path)
                 file.close()
                 os.unlink(dest)
             return ckpt_path
