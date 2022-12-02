@@ -3,6 +3,7 @@ import tarfile
 import typing
 import urllib.request
 from functools import partial
+from pathlib import Path
 from typing import Any, List
 
 import lightning as L
