@@ -62,7 +62,7 @@ class SDInference:
         force_download: typing.Optional[bool] = None,
         ckpt_filename: typing.Optional[str] = None,
         accelerator: str = "auto",
-        version="2.0",
+        version="1.5",
     ):
         assert (
             version in SUPPORTED_VERSIONS

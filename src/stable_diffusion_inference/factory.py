@@ -25,7 +25,7 @@ def create_text2image(
             ckpt_filename="sd-v1-4.ckpt",
             **kwargs,
         )
-    elif sd_variant == "sd1.5" or sd_variant == "sd1":
+    elif sd_variant in ("sd1.5", "sd1", "sd"):
         config_path = f"{_ROOT_DIR}/configs/stable-diffusion/v1-inference.yaml"
         checkpoint_path = "https://storage.googleapis.com/gradsflow.appspot.com/oss/model-weights/v1-5-pruned-emaonly.ckpt"
 
@@ -51,7 +51,7 @@ def create_text2image(
             version="2.0",
             **kwargs,
         )
-    elif sd_variant == "sd2_base":
+    elif sd_variant in ("sd2", "sd2_base"):
         config_path = f"{_ROOT_DIR}/configs/stable-diffusion/v2-inference.yaml"
         checkpoint_path = "https://pl-public-data.s3.amazonaws.com/dream_stable_diffusion/512-base-ema.ckpt"
 
