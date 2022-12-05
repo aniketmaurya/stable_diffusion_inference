@@ -10,6 +10,17 @@ class Prompt(BaseModel):
 
 
 class SDServe(PythonServer):
+    """
+    **To use the API as a client:**
+    ```python
+    import requests
+    response = requests.post("https://tyixm-01gkgswq452hy2n6grkpz4je6v.litng-ai-03.litng.ai/predict", json={
+      "prompt": "data string"
+    })
+    print(response.json())
+    ```
+    """
+
     def __init__(self, sd_variant="sd1", **kwargs):
         super().__init__(input_type=Prompt, output_type=Image, **kwargs)
         self.sd_variant = sd_variant
@@ -20,7 +31,7 @@ class SDServe(PythonServer):
         self._model = create_text2image(self.sd_variant)
 
     def predict(self, request: Prompt):
-        return {"image": self._model(request.prompt)}
+        return Image(image=self._model(request.prompt))
 
 
 class SDComparison(ServeGradio):
