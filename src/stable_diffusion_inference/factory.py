@@ -1,14 +1,14 @@
 import os
 import typing
 
-from .lit_model import SDInference
+from .model import SDInference
 
 
 def create_text2image(
-        sd_variant: str,
-        cache_dir: typing.Optional[str] = None,
-        force_download: typing.Optional[bool] = None,
-        **kwargs,
+    sd_variant: str,
+    cache_dir: typing.Optional[str] = None,
+    force_download: typing.Optional[bool] = None,
+    **kwargs,
 ):
     model = None
     _ROOT_DIR = os.path.dirname(__file__)
