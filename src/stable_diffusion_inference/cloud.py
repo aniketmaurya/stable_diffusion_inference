@@ -1,4 +1,6 @@
+import base64
 from functools import partial
+from io import BytesIO
 
 import gradio as gr
 from lightning.app.components.serve import Image, PythonServer, ServeGradio
@@ -31,7 +33,11 @@ class SDServe(PythonServer):
         self._model = create_text2image(self.sd_variant)
 
     def predict(self, request: Prompt):
-        return Image(image=self._model(request.prompt))
+        image = self._model(request.prompt)
+        buffered = BytesIO()
+        image.save(buffered, format="PNG")
+        img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
+        return {"image": f"data:image/png;base64,{img_str}"}
 
 
 class SDComparison(ServeGradio):
