@@ -12,7 +12,7 @@ from PIL import Image
 from torch.utils.data import DataLoader
 
 from .data import PromptDataset
-from .lit_model import SUPPORTED_VERSIONS, StableDiffusionModule
+from .lit_model import SUPPORTED_VERSIONS, StableDiffusionModule, clear_cuda
 
 
 def download_checkpoints(
