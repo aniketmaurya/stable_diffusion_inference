@@ -4,7 +4,7 @@
 """Serve Stable Diffusion on Lightning AI Cloud"""
 import lightning as L
 
-from stable_diffusion_inference.cloud import SDServe
+from stable_diffusion_inference.cloud import Prompt, SDServe
 
 component = SDServe(cloud_compute=L.CloudCompute("gpu", disk_size=30))
 app = L.LightningApp(component)
