@@ -12,9 +12,7 @@ from PIL import Image
 from torch.utils.data import DataLoader
 
 from .data import PromptDataset
-from .lit_model import StableDiffusionModule
-
-SUPPORTED_VERSIONS = {"1.4", "1.5", "2.0"}
+from .lit_model import SUPPORTED_VERSIONS, StableDiffusionModule
 
 
 def download_checkpoints(

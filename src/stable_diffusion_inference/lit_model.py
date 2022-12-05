@@ -10,6 +10,7 @@ from ldm1.models.diffusion.ddim import DDIMSampler as SD1Sampler
 from ldm2.models.diffusion.ddim import DDIMSampler as SD2Sampler
 
 SAMPLERS = {"1.4": SD1Sampler, "2.0": SD2Sampler}
+SUPPORTED_VERSIONS = {"1.4", "1.5", "2.0"}
 
 
 def clear_cuda():
