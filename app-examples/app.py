@@ -1,11 +1,10 @@
 # !pip install taming-transformers-rom1504 -q
 # !pip install -U "clip@ git+https://github.com/openai/CLIP.git@main" -q
 # !pip install "sd_inference@git+https://github.com/aniketmaurya/stable_diffusion_inference@main"
-"""Gradio App to show difference between Stable diffusion 1.5 and 2.0"""
+"""Serve Stable Diffusion on Lightning AI Cloud"""
 import lightning as L
 
-from stable_diffusion_inference.cloud import SDComparison
+from stable_diffusion_inference.cloud import SDServe
 
-component = L.LightningApp(
-    SDComparison(cloud_compute=L.CloudCompute("gpu-fast", disk_size=30))
-)
+component = SDServe(cloud_compute=L.CloudCompute("gpu", disk_size=30))
+app = L.LightningApp(component)
