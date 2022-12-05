@@ -6,7 +6,6 @@ import lightning as L
 
 from stable_diffusion_inference.cloud import SDComparison
 
-
 component = L.LightningApp(
     SDComparison(cloud_compute=L.CloudCompute("gpu-fast", disk_size=30))
 )
