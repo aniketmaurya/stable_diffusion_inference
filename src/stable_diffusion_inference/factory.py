@@ -10,6 +10,7 @@ def create_text2image(
     force_download: typing.Optional[bool] = None,
     **kwargs,
 ):
+    sd_variant = sd_variant.lower()
     model = None
     _ROOT_DIR = os.path.dirname(__file__)
     if sd_variant == "sd1.4":
