@@ -28,7 +28,7 @@ def create_text2image(
         )
     elif sd_variant in ("sd1.5", "sd1", "sd"):
         config_path = f"{_ROOT_DIR}/configs/stable-diffusion/v1-inference.yaml"
-        checkpoint_path = "https://storage.googleapis.com/gradsflow.appspot.com/oss/model-weights/v1-5-pruned-emaonly.ckpt"
+        checkpoint_path = "https://pl-public-data.s3.amazonaws.com/dream_stable_diffusion/v1-5-pruned-emaonly.ckpt"
 
         model = SDInference(
             config_path=config_path,
