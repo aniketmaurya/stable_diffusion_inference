@@ -33,7 +33,7 @@ def create_text2image(
         model = SDInference(
             config_path=config_path,
             checkpoint_path=checkpoint_path,
-            version="1.4",
+            version="1.5",
             cache_dir=cache_dir,
             force_download=force_download,
             ckpt_filename="v1-5-pruned-emaonly.ckpt",
