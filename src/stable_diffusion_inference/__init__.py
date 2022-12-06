@@ -1,1 +1,2 @@
-from .lit_model import SDInference, create_text2image
+from .factory import create_text2image
+from .model import SDInference
