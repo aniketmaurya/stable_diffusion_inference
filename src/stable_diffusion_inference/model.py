@@ -97,7 +97,11 @@ class SDInference:
             clear_cuda()
 
     def __call__(
-        self, prompts: List[str], image_size: int = 768, inference_steps: int = 50
+        self,
+        prompts: List[str],
+        negative_prompts: typing.Optional[List[str]] = None,
+        image_size: int = 768,
+        inference_steps: int = 50,
     ) -> typing.Union[List[Image.Image], Image.Image]:
         if isinstance(prompts, str):
             prompts = [prompts]
@@ -112,6 +116,7 @@ class SDInference:
             height=image_size,
             width=image_size,
             num_inference_steps=inference_steps,
+            negative_prompts=negative_prompts,
         )
         pil_results = trainer.predict(model, dataloaders=img_dl)[0]
         if len(pil_results) == 1:

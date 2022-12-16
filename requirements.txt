@@ -1,4 +1,5 @@
 opencv-python~=4.6.0.66
+taming-transformers-rom1504>=0.0.6
 Pillow
 pudb==2019.2
 imageio

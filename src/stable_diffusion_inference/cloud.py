@@ -55,7 +55,7 @@ class SDComparison(ServeGradio):
             "sd2": partial(sd2, image_size=512),
         }
 
-    def predict(self, prompt: str):
+    def predict(self, prompt: str, negative_prompts=None):
         image1 = self.model["sd1"](prompts=prompt)
         image2 = self.model["sd2"](prompts=prompt)
         return [image1, image2]

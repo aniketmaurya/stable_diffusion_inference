@@ -1,5 +1,5 @@
 import typing
-from typing import Any, List
+from typing import Any, List, Optional
 
 import lightning as L
 import numpy as np
@@ -54,7 +54,7 @@ def load_model_from_config(
 
 class StableDiffusionModule(L.LightningModule):
     def __init__(
-        self, device: torch.device, config_path: str, checkpoint_path: str, version: str
+        self, device: str, config_path: str, checkpoint_path: str, version: str
     ):
         from omegaconf import OmegaConf
 
@@ -86,11 +86,15 @@ class StableDiffusionModule(L.LightningModule):
         height: int,
         width: int,
         num_inference_steps: int,
+        negative_prompts: Optional[List[str]] = None,
     ) -> Any:
         batch_size = len(prompts)
 
         with self.model.ema_scope():
-            uc = self.model.get_learned_conditioning(batch_size * [""])
+            if negative_prompts is None:
+                uc = self.model.get_learned_conditioning(batch_size * [""])
+            else:
+                uc = self.model.get_learned_conditioning(negative_prompts)
             c = self.model.get_learned_conditioning(prompts)
             shape = [4, height // DOWNSAMPLING_FACTOR, width // DOWNSAMPLING_FACTOR]
             samples_ddim, _ = self.sampler.sample(
