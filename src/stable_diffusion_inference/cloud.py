@@ -41,14 +41,14 @@ class SDServe(PythonServer):
 
 
 class SDComparison(ServeGradio):
-    inputs = gr.Textbox(label="Prompt", value="Cats in hats")
+    inputs = [gr.Textbox(label="Prompt", value="Cats in hats"), gr.Textbox(label="Negative prompts (separated by comma)")]
     outputs = [gr.Image(label="SD 1"), gr.Image(label="SD 2")]
     title = "Compare images from Stable Diffusion 1 and 2.0"
 
     def build_model(self):
         from stable_diffusion_inference import create_text2image
 
-        sd1 = create_text2image("sd1")
+        sd1 = create_text2image("sd1.5")
         sd2 = create_text2image("sd2_base")  # for SD 2.0 with 512 image size
         return {
             "sd1": partial(sd1, image_size=512),
@@ -56,6 +56,9 @@ class SDComparison(ServeGradio):
         }
 
     def predict(self, prompt: str, negative_prompts=None):
-        image1 = self.model["sd1"](prompts=prompt)
-        image2 = self.model["sd2"](prompts=prompt)
+        if negative_prompts:
+            negative_prompts = negative_prompts.split(",")
+
+        image1 = self.model["sd1"](prompts=prompt, negative_prompts=negative_prompts)
+        image2 = self.model["sd2"](prompts=prompt, negative_prompts=negative_prompts)
         return [image1, image2]

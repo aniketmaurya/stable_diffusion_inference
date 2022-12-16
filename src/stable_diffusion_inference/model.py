@@ -100,8 +100,8 @@ class SDInference:
         self,
         prompts: List[str],
         negative_prompts: typing.Optional[List[str]] = None,
-        image_size: int = 768,
-        inference_steps: int = 50,
+        image_size: int = 512,
+        inference_steps: int = 25,
     ) -> typing.Union[List[Image.Image], Image.Image]:
         if isinstance(prompts, str):
             prompts = [prompts]

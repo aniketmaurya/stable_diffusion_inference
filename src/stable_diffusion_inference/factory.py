@@ -9,7 +9,7 @@ def create_text2image(
     cache_dir: typing.Optional[str] = None,
     force_download: typing.Optional[bool] = None,
     **kwargs,
-):
+)-> SDInference:
     sd_variant = sd_variant.lower()
     model = None
     _ROOT_DIR = os.path.dirname(__file__)
