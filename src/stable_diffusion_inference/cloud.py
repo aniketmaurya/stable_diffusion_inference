@@ -41,7 +41,9 @@ class SDServe(PythonServer):
 
 
 class SDComparison(ServeGradio):
-    inputs = [gr.Textbox(label="Prompt", value="Cats in hats"), gr.Textbox(label="Negative prompts (separated by comma)")]
+    inputs = [gr.Textbox(label="Prompt", value="Cats in hats"), gr.Textbox(label="Negative prompts (separated by comma)"),
+    gr.Number(label="Guidance scale", value=8.0)
+    ]
     outputs = [gr.Image(label="SD 1"), gr.Image(label="SD 2")]
     title = "Compare images from Stable Diffusion 1 and 2.0"
 
@@ -55,10 +57,11 @@ class SDComparison(ServeGradio):
             "sd2": partial(sd2, image_size=512),
         }
 
-    def predict(self, prompt: str, negative_prompts=None):
+    def predict(self, prompt: str, negative_prompts=None, guidance_scale:float=8):
         if negative_prompts:
             negative_prompts = negative_prompts.split(",")
+            negative_prompts = [prompt.strip() for prompt in negative_prompts]
 
-        image1 = self.model["sd1"](prompts=prompt, negative_prompts=negative_prompts)
-        image2 = self.model["sd2"](prompts=prompt, negative_prompts=negative_prompts)
+        image1 = self.model["sd1"](prompts=prompt, negative_prompts=negative_prompts, uc_guidance_scale=guidance_scale)
+        image2 = self.model["sd2"](prompts=prompt, negative_prompts=negative_prompts, uc_guidance_scale=guidance_scale)
         return [image1, image2]

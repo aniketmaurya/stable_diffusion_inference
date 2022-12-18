@@ -87,6 +87,7 @@ class StableDiffusionModule(L.LightningModule):
         width: int,
         num_inference_steps: int,
         negative_prompts: Optional[List[str]] = None,
+        uc_guidance_scale:int = UNCONDITIONAL_GUIDANCE_SCALE,
     ) -> Any:
         batch_size = len(prompts)
 
@@ -94,6 +95,7 @@ class StableDiffusionModule(L.LightningModule):
             if negative_prompts is None:
                 uc = self.model.get_learned_conditioning(batch_size * [""])
             else:
+                print(negative_prompts)
                 uc = self.model.get_learned_conditioning(negative_prompts)
             c = self.model.get_learned_conditioning(prompts)
             shape = [4, height // DOWNSAMPLING_FACTOR, width // DOWNSAMPLING_FACTOR]
@@ -103,7 +105,7 @@ class StableDiffusionModule(L.LightningModule):
                 batch_size=batch_size,
                 shape=shape,
                 verbose=False,
-                unconditional_guidance_scale=UNCONDITIONAL_GUIDANCE_SCALE,
+                unconditional_guidance_scale=uc_guidance_scale,
                 unconditional_conditioning=uc,
                 eta=0.0,
             )

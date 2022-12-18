@@ -102,6 +102,7 @@ class SDInference:
         negative_prompts: typing.Optional[List[str]] = None,
         image_size: int = 512,
         inference_steps: int = 25,
+        **kwargs
     ) -> typing.Union[List[Image.Image], Image.Image]:
         if isinstance(prompts, str):
             prompts = [prompts]
@@ -117,6 +118,7 @@ class SDInference:
             width=image_size,
             num_inference_steps=inference_steps,
             negative_prompts=negative_prompts,
+            **kwargs
         )
         pil_results = trainer.predict(model, dataloaders=img_dl)[0]
         if len(pil_results) == 1:
