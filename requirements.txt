@@ -1,11 +1,11 @@
-opencv-python~=4.6.0.66
+opencv-python>=4.6.0.66
 Pillow
-pudb==2019.2
+pudb>=2019.2
 imageio
 imageio-ffmpeg
 pytorch-lightning
 omegaconf
-einops==0.3.0
+einops>=0.3.0
 transformers>4.19.2
 open-clip-torch>=2.20.0
 torch
