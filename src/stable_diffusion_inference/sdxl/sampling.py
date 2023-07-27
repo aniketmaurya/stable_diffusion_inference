@@ -17,6 +17,11 @@ from torchvision import transforms
 from torchvision.utils import make_grid
 from .helpers import *
 
+import os 
+dir_path = os.path.dirname(os.path.realpath(__file__))
+print(dir_path)
+
+
 
 SD_XL_BASE_RATIOS = {
     "0.5": (704, 1408),
@@ -54,7 +59,7 @@ VERSION2SPECS = {
         "C": 4,
         "f": 8,
         "is_legacy": False,
-        "config": "configs/inference/sd_xl_base.yaml",
+        f"config": f"{dir_path}/../configs/sd_xl_base.yaml",
         "ckpt": "checkpoints/sd_xl_base_1.0.safetensors",
     },
     "SDXL-base-0.9": {

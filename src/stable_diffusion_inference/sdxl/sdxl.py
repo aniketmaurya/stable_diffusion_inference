@@ -1,16 +1,18 @@
 from .sampling import *
 
 class SDXL:
-    def __init__(self, version: str="SDXL-base-1.0", mode="txt2img", add_pipeline=False) -> None:
+    def __init__(self, checkpoint_path:str, version: str="SDXL-base-1.0", mode="txt2img", add_pipeline=False) -> None:
         """
         version: VERSION2SPECS.keys()
         mode: ("txt2img", "img2img")
         add_pipeline: whether to Load SDXL-refiner
         """
+        self.checkpoint_path=checkpoint_path
         self.mode = mode
         self.version = version
         self.add_pipeline = add_pipeline
         self.version_dict = VERSION2SPECS[version]
+        self.version_dict["ckpt"] = checkpoint_path
 
         self.state = state = init_st(self.version_dict, load_filter=True)
         if state["msg"]:
