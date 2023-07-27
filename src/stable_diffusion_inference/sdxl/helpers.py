@@ -85,8 +85,7 @@ def init_st(version_dict, load_ckpt=True, load_filter=False):
         state["model"] = model
         state["ckpt"] = ckpt if load_ckpt else None
         state["config"] = config
-        if load_filter:
-            NotImplementedError
+        # if load_filter:
             # state["filter"] = DeepFloydDataFiltering(verbose=False)
     return state
 
@@ -156,77 +155,6 @@ def load_model_from_config(config, ckpt=None, verbose=True):
 
 def get_unique_embedder_keys_from_conditioner(conditioner):
     return list(set([x.input_key for x in conditioner.embedders]))
-
-
-def init_embedder_options(keys, init_dict, prompt=None, negative_prompt=None):
-    # Hardcoded demo settings; might undergo some changes in the future
-
-    value_dict = {}
-    for key in keys:
-        if key == "txt":
-            if prompt is None:
-                prompt = st.text_input(
-                    "Prompt", "A professional photograph of an astronaut riding a pig"
-                )
-            if negative_prompt is None:
-                negative_prompt = st.text_input("Negative prompt", "")
-
-            value_dict["prompt"] = prompt
-            value_dict["negative_prompt"] = negative_prompt
-
-        if key == "original_size_as_tuple":
-            orig_width = st.number_input(
-                "orig_width",
-                value=init_dict["orig_width"],
-                min_value=16,
-            )
-            orig_height = st.number_input(
-                "orig_height",
-                value=init_dict["orig_height"],
-                min_value=16,
-            )
-
-            value_dict["orig_width"] = orig_width
-            value_dict["orig_height"] = orig_height
-
-        if key == "crop_coords_top_left":
-            crop_coord_top = st.number_input("crop_coords_top", value=0, min_value=0)
-            crop_coord_left = st.number_input("crop_coords_left", value=0, min_value=0)
-
-            value_dict["crop_coords_top"] = crop_coord_top
-            value_dict["crop_coords_left"] = crop_coord_left
-
-        if key == "aesthetic_score":
-            value_dict["aesthetic_score"] = 6.0
-            value_dict["negative_aesthetic_score"] = 2.5
-
-        if key == "target_size_as_tuple":
-            value_dict["target_width"] = init_dict["target_width"]
-            value_dict["target_height"] = init_dict["target_height"]
-
-    return value_dict
-
-
-def perform_save_locally(save_path, samples):
-    os.makedirs(os.path.join(save_path), exist_ok=True)
-    base_count = len(os.listdir(os.path.join(save_path)))
-    samples = embed_watemark(samples)
-    for sample in samples:
-        sample = 255.0 * rearrange(sample.cpu().numpy(), "c h w -> h w c")
-        Image.fromarray(sample.astype(np.uint8)).save(
-            os.path.join(save_path, f"{base_count:09}.png")
-        )
-        base_count += 1
-
-
-def init_save_locally(_dir, init_value: bool = False):
-    save_locally = st.sidebar.checkbox("Save images locally", value=init_value)
-    if save_locally:
-        save_path = st.text_input("Save path", value=os.path.join(_dir, "samples"))
-    else:
-        save_path = None
-
-    return save_locally, save_path
 
 
 class Img2ImgDiscretizationWrapper:
@@ -331,33 +259,36 @@ def init_sampling(
     stage2strength=None,
 ):
     num_rows, num_cols = 1, 1
-    if specify_num_samples:
-        num_cols = st.number_input(
-            f"num cols #{key}", value=2, min_value=1, max_value=10
-        )
-
-    steps = st.sidebar.number_input(
-        f"steps #{key}", value=40, min_value=1, max_value=1000
-    )
-    sampler = st.sidebar.selectbox(
-        f"Sampler #{key}",
-        [
-            "EulerEDMSampler",
-            "HeunEDMSampler",
-            "EulerAncestralSampler",
-            "DPMPP2SAncestralSampler",
-            "DPMPP2MSampler",
-            "LinearMultistepSampler",
-        ],
-        0,
-    )
-    discretization = st.sidebar.selectbox(
-        f"Discretization #{key}",
-        [
-            "LegacyDDPMDiscretization",
-            "EDMDiscretization",
-        ],
-    )
+    # if specify_num_samples:
+    #     num_cols = st.number_input(
+    #         f"num cols #{key}", value=2, min_value=1, max_value=10
+    #     )
+    # steps = st.sidebar.number_input(
+    #     f"steps #{key}", value=40, min_value=1, max_value=1000
+    # )
+    num_cols=2
+    steps=40
+    sampler="EulerEDMSampler"
+    discretization = "EDMDiscretization"
+    # sampler = st.sidebar.selectbox(
+    #     f"Sampler #{key}",
+    #     [
+    #         "EulerEDMSampler",
+    #         "HeunEDMSampler",
+    #         "EulerAncestralSampler",
+    #         "DPMPP2SAncestralSampler",
+    #         "DPMPP2MSampler",
+    #         "LinearMultistepSampler",
+    #     ],
+    #     0,
+    # )
+    # discretization = st.sidebar.selectbox(
+    #     f"Discretization #{key}",
+    #     [
+    #         "LegacyDDPMDiscretization",
+    #         "EDMDiscretization",
+    #     ],
+    # )
 
     discretization_config = get_discretization(discretization, key=key)
 
@@ -474,42 +405,6 @@ def get_sampler(sampler_name, steps, discretization_config, guider_config, key=1
 
     return sampler
 
-
-def get_interactive_image(key=None) -> Image.Image:
-    image = st.file_uploader("Input", type=["jpg", "JPEG", "png"], key=key)
-    if image is not None:
-        image = Image.open(image)
-        if not image.mode == "RGB":
-            image = image.convert("RGB")
-        return image
-
-
-def load_img(display=True, key=None):
-    image = get_interactive_image(key=key)
-    if image is None:
-        return None
-    if display:
-        st.image(image)
-    w, h = image.size
-    print(f"loaded input image of size ({w}, {h})")
-
-    transform = transforms.Compose(
-        [
-            transforms.ToTensor(),
-            transforms.Lambda(lambda x: x * 2.0 - 1.0),
-        ]
-    )
-    img = transform(image)[None, ...]
-    st.text(f"input min/max/mean: {img.min():.3f}/{img.max():.3f}/{img.mean():.3f}")
-    return img
-
-
-def get_init_img(batch_size=1, key=None):
-    init_image = load_img(key=key).cuda()
-    init_image = repeat(init_image, "1 ... -> b ...", b=batch_size)
-    return init_image
-
-
 def do_sample(
     model,
     sampler,
@@ -529,9 +424,6 @@ def do_sample(
     if batch2model_input is None:
         batch2model_input = []
 
-    st.text("Sampling")
-
-    outputs = st.empty()
     precision_scope = autocast
     with torch.no_grad():
         with precision_scope("cuda"):
@@ -588,15 +480,52 @@ def do_sample(
 
                 if filter is not None:
                     samples = filter(samples)
-
-                grid = torch.stack([samples])
-                grid = rearrange(grid, "n b c h w -> (n h) (b w) c")
-                outputs.image(grid.cpu().numpy())
-
                 if return_latents:
                     return samples, samples_z
                 return samples
 
+def init_embedder_options(keys, init_dict, prompt=None, negative_prompt=None):
+    # Hardcoded demo settings; might undergo some changes in the future
+    value_dict = {}
+    for key in keys:
+        if key == "txt":
+            if negative_prompt is None:
+                negative_prompt = ""
+
+            value_dict["prompt"] = prompt
+            value_dict["negative_prompt"] = negative_prompt
+
+        if key == "original_size_as_tuple":
+            orig_width = st.number_input(
+                "orig_width",
+                value=init_dict["orig_width"],
+                min_value=16,
+            )
+            orig_height = st.number_input(
+                "orig_height",
+                value=init_dict["orig_height"],
+                min_value=16,
+            )
+
+            value_dict["orig_width"] = orig_width
+            value_dict["orig_height"] = orig_height
+
+        if key == "crop_coords_top_left":
+            crop_coord_top = st.number_input("crop_coords_top", value=0, min_value=0)
+            crop_coord_left = st.number_input("crop_coords_left", value=0, min_value=0)
+
+            value_dict["crop_coords_top"] = crop_coord_top
+            value_dict["crop_coords_left"] = crop_coord_left
+
+        if key == "aesthetic_score":
+            value_dict["aesthetic_score"] = 6.0
+            value_dict["negative_aesthetic_score"] = 2.5
+
+        if key == "target_size_as_tuple":
+            value_dict["target_width"] = init_dict["target_width"]
+            value_dict["target_height"] = init_dict["target_height"]
+
+    return value_dict
 
 def get_batch(keys, value_dict, N: Union[List, ListConfig], device="cuda"):
     # Hardcoded demo setups; might undergo some changes in the future
@@ -670,8 +599,6 @@ def do_img2img(
     filter=None,
     add_noise=True,
 ):
-    st.text("Sampling")
-
     outputs = st.empty()
     precision_scope = autocast
     with torch.no_grad():

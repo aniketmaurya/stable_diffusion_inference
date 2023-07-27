@@ -1,7 +1,8 @@
 from .sampling import *
 
+
 class SDXL:
-    def __init__(self, checkpoint_path:str, version: str="SDXL-base-1.0", mode="txt2img", add_pipeline=False, low_vram=False, load_filter=False) -> None:
+    def __init__(self, checkpoint_path:str, version: str="SDXL-base-1.0", mode="txt2img", add_pipeline=False, low_vram=False, load_filter=True) -> None:
         """
         version: VERSION2SPECS.keys()
         mode: ("txt2img", "img2img")
@@ -16,16 +17,14 @@ class SDXL:
         self.version_dict["ckpt"] = checkpoint_path
 
         self.state = state = init_st(self.version_dict, load_filter=load_filter)
-        if state["msg"]:
-            st.info(state["msg"])
+        self.model = state["model"]
+        self.filter = state.get("filter")
+        set_lowvram_mode(low_vram)
+        
 
-        self.low_vram = low_vram
-        if low_vram:
-            self.state["model"] = self.state["model"].half()
-
-
-    def __call__(self, prompt:str, ):
-        state = self.state
+    def __call__(self, prompt:str, negative_prompt=None):
+        model = self.model
+        filter = self.filter
         mode = self.mode
         add_pipeline = self.add_pipeline
         version = self.version
@@ -35,18 +34,17 @@ class SDXL:
         stage2strength = None
         finish_denoising = False
 
-        if mode == "txt2img":
-            out = run_txt2img(
-                state,
-                version,
-                version_dict,
-                is_legacy=is_legacy,
-                return_latents=add_pipeline,
-                filter=state.get("filter"),
-                stage2strength=stage2strength,
-            )
-        else:
-            raise ValueError(f"unknown mode {mode}")
+        out = run_txt2img(
+            model,
+            version,
+            version_dict,
+            prompt=prompt,
+            negative_prompt=negative_prompt,
+            is_legacy=is_legacy,
+            return_latents=add_pipeline,
+            filter=filter,
+            stage2strength=stage2strength,
+        )
         if isinstance(out, (tuple, list)):
             samples, samples_z = out
         else:
