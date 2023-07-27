@@ -13,7 +13,7 @@ def _load_requirements(path_dir: str, file_name: str = "requirements.txt") -> li
 
 setup(
     name="sd_inference",
-    version="0.0.2",
+    version="0.0.3.dev0",
     description="",
     packages=find_packages(
         where="src",  # '.' by default
