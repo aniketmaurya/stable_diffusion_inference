@@ -2,7 +2,8 @@
 
 Simple and easy stable diffusion inference with LightningModule on GPU, CPU and MPS (Possibly all devices supported by [Lightning](https://lightning.ai)).
 
-**To install**
+
+**To install SD 2.1 and earlier**
 
 ```
 pip install "sd_inference@git+https://github.com/aniketmaurya/stable_diffusion_inference@main"
