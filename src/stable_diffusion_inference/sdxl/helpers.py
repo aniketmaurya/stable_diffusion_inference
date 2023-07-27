@@ -1,18 +1,15 @@
+import logging
 import math
 import os
 from typing import List, Union
 
 import numpy as np
-import streamlit as st
 import torch
 from einops import rearrange, repeat
 from imwatermark import WatermarkEncoder
 from omegaconf import ListConfig, OmegaConf
 from PIL import Image
 from safetensors.torch import load_file as load_safetensors
-from torch import autocast
-from torchvision import transforms
-from torchvision.utils import make_grid
 
 # from scripts.util.detection.nsfw_and_watermark_dectection import DeepFloydDataFiltering
 from sgm.modules.diffusionmodules.sampling import (
@@ -24,6 +21,9 @@ from sgm.modules.diffusionmodules.sampling import (
     LinearMultistepSampler,
 )
 from sgm.util import append_dims, instantiate_from_config
+from torch import autocast
+from torchvision import transforms
+from torchvision.utils import make_grid
 
 
 class WatermarkEmbedder:
@@ -71,7 +71,6 @@ WATERMARK_BITS = [int(bit) for bit in bin(WATERMARK_MESSAGE)[2:]]
 embed_watemark = WatermarkEmbedder(WATERMARK_BITS)
 
 
-@st.cache_resource()
 def init_st(version_dict, load_ckpt=True, load_filter=False):
     state = dict()
     if not "model" in state:
@@ -86,7 +85,7 @@ def init_st(version_dict, load_ckpt=True, load_filter=False):
         state["ckpt"] = ckpt if load_ckpt else None
         state["config"] = config
         # if load_filter:
-            # state["filter"] = DeepFloydDataFiltering(verbose=False)
+        # state["filter"] = DeepFloydDataFiltering(verbose=False)
     return state
 
 
@@ -127,7 +126,7 @@ def load_model_from_config(config, ckpt=None, verbose=True):
             pl_sd = torch.load(ckpt, map_location="cpu")
             if "global_step" in pl_sd:
                 global_step = pl_sd["global_step"]
-                st.info(f"loaded ckpt from global step {global_step}")
+                logging.info(f"loaded ckpt from global step {global_step}")
                 print(f"Global Step: {pl_sd['global_step']}")
             sd = pl_sd["state_dict"]
         elif ckpt.endswith("safetensors"):
@@ -212,30 +211,20 @@ class Txt2NoisyDiscretizationWrapper:
 
 
 def get_guider(key):
-    guider = st.sidebar.selectbox(
-        f"Discretization #{key}",
-        [
+    logging.info(f"Discretization #{key}")
+    guider = [
             "VanillaCFG",
             "IdentityGuider",
-        ],
-    )
+        ][key]
 
     if guider == "IdentityGuider":
         guider_config = {
             "target": "sgm.modules.diffusionmodules.guiders.IdentityGuider"
         }
     elif guider == "VanillaCFG":
-        scale = st.number_input(
-            f"cfg-scale #{key}", value=5.0, min_value=0.0, max_value=100.0
-        )
-
-        thresholder = st.sidebar.selectbox(
-            f"Thresholder #{key}",
-            [
-                "None",
-            ],
-        )
-
+        # cfg-scale 0 to 100
+        scale = 5.0
+        thresholder = "None"
         if thresholder == "None":
             dyn_thresh_config = {
                 "target": "sgm.modules.diffusionmodules.sampling_utils.NoDynamicThresholding"
@@ -259,44 +248,29 @@ def init_sampling(
     stage2strength=None,
 ):
     num_rows, num_cols = 1, 1
-    # if specify_num_samples:
-    #     num_cols = st.number_input(
-    #         f"num cols #{key}", value=2, min_value=1, max_value=10
-    #     )
-    # steps = st.sidebar.number_input(
-    #     f"steps #{key}", value=40, min_value=1, max_value=1000
-    # )
-    num_cols=2
-    steps=40
-    sampler="EulerEDMSampler"
+    num_cols = 2  # 1 to 10
+    steps = 40  # 1 to 1000
+    sampler = "EulerEDMSampler"
     discretization = "EDMDiscretization"
-    # sampler = st.sidebar.selectbox(
-    #     f"Sampler #{key}",
-    #     [
+
+    # Sample choices:
     #         "EulerEDMSampler",
     #         "HeunEDMSampler",
     #         "EulerAncestralSampler",
     #         "DPMPP2SAncestralSampler",
     #         "DPMPP2MSampler",
     #         "LinearMultistepSampler",
-    #     ],
-    #     0,
-    # )
-    # discretization = st.sidebar.selectbox(
-    #     f"Discretization #{key}",
-    #     [
+
+    # discretization choices:
     #         "LegacyDDPMDiscretization",
     #         "EDMDiscretization",
-    #     ],
-    # )
-
     discretization_config = get_discretization(discretization, key=key)
 
     guider_config = get_guider(key=key)
 
     sampler = get_sampler(sampler, steps, discretization_config, guider_config, key=key)
     if img2img_strength < 1.0:
-        st.warning(
+        logging.warning(
             f"Wrapping {sampler.__class__.__name__} with Img2ImgDiscretizationWrapper"
         )
         sampler.discretization = Img2ImgDiscretizationWrapper(
@@ -315,9 +289,9 @@ def get_discretization(discretization, key=1):
             "target": "sgm.modules.diffusionmodules.discretizer.LegacyDDPMDiscretization",
         }
     elif discretization == "EDMDiscretization":
-        sigma_min = st.number_input(f"sigma_min #{key}", value=0.03)  # 0.0292
-        sigma_max = st.number_input(f"sigma_max #{key}", value=14.61)  # 14.6146
-        rho = st.number_input(f"rho #{key}", value=3.0)
+        sigma_min = 0.03  # st.number_input(f"sigma_min #{key}", value=0.03)  # 0.0292
+        sigma_max = 14.61  # st.number_input(f"sigma_max #{key}", value=14.61)  # 14.6146
+        rho = 3.0  # st.number_input(f"rho #{key}", value=3.0)
         discretization_config = {
             "target": "sgm.modules.diffusionmodules.discretizer.EDMDiscretization",
             "params": {
@@ -332,10 +306,10 @@ def get_discretization(discretization, key=1):
 
 def get_sampler(sampler_name, steps, discretization_config, guider_config, key=1):
     if sampler_name == "EulerEDMSampler" or sampler_name == "HeunEDMSampler":
-        s_churn = st.sidebar.number_input(f"s_churn #{key}", value=0.0, min_value=0.0)
-        s_tmin = st.sidebar.number_input(f"s_tmin #{key}", value=0.0, min_value=0.0)
-        s_tmax = st.sidebar.number_input(f"s_tmax #{key}", value=999.0, min_value=0.0)
-        s_noise = st.sidebar.number_input(f"s_noise #{key}", value=1.0, min_value=0.0)
+        s_churn = 0.0  #st.sidebar.number_input(f"s_churn #{key}", value=0.0, min_value=0.0)
+        s_tmin = 0.0  #st.sidebar.number_input(f"s_tmin #{key}", value=0.0, min_value=0.0)
+        s_tmax = 999.0  #st.sidebar.number_input(f"s_tmax #{key}", value=999.0, min_value=0.0)
+        s_noise = 1.0  # st.sidebar.number_input(f"s_noise #{key}", value=1.0, min_value=0.0)
 
         if sampler_name == "EulerEDMSampler":
             sampler = EulerEDMSampler(
@@ -363,8 +337,8 @@ def get_sampler(sampler_name, steps, discretization_config, guider_config, key=1
         sampler_name == "EulerAncestralSampler"
         or sampler_name == "DPMPP2SAncestralSampler"
     ):
-        s_noise = st.sidebar.number_input("s_noise", value=1.0, min_value=0.0)
-        eta = st.sidebar.number_input("eta", value=1.0, min_value=0.0)
+        s_noise = 1.0  # st.sidebar.number_input("s_noise", value=1.0, min_value=0.0)
+        eta = 1.0  # st.sidebar.number_input("eta", value=1.0, min_value=0.0)
 
         if sampler_name == "EulerAncestralSampler":
             sampler = EulerAncestralSampler(
@@ -392,7 +366,7 @@ def get_sampler(sampler_name, steps, discretization_config, guider_config, key=1
             verbose=True,
         )
     elif sampler_name == "LinearMultistepSampler":
-        order = st.sidebar.number_input("order", value=4, min_value=1)
+        order = 4  # st.sidebar.number_input("order", value=4, min_value=1)
         sampler = LinearMultistepSampler(
             num_steps=steps,
             discretization_config=discretization_config,
@@ -404,6 +378,7 @@ def get_sampler(sampler_name, steps, discretization_config, guider_config, key=1
         raise ValueError(f"unknown sampler {sampler_name}!")
 
     return sampler
+
 
 def do_sample(
     model,
@@ -484,6 +459,7 @@ def do_sample(
                     return samples, samples_z
                 return samples
 
+
 def init_embedder_options(keys, init_dict, prompt=None, negative_prompt=None):
     # Hardcoded demo settings; might undergo some changes in the future
     value_dict = {}
@@ -496,23 +472,20 @@ def init_embedder_options(keys, init_dict, prompt=None, negative_prompt=None):
             value_dict["negative_prompt"] = negative_prompt
 
         if key == "original_size_as_tuple":
-            orig_width = st.number_input(
-                "orig_width",
-                value=init_dict["orig_width"],
-                min_value=16,
-            )
-            orig_height = st.number_input(
-                "orig_height",
-                value=init_dict["orig_height"],
-                min_value=16,
-            )
+            orig_width = init_dict["orig_width"]  # min 16 
+            orig_height = init_dict["orig_height"]  # min 16
+            # st.number_input(
+            #     "orig_height",
+            #     value=,
+            #     min_value=16,
+            # )
 
             value_dict["orig_width"] = orig_width
             value_dict["orig_height"] = orig_height
 
         if key == "crop_coords_top_left":
-            crop_coord_top = st.number_input("crop_coords_top", value=0, min_value=0)
-            crop_coord_left = st.number_input("crop_coords_left", value=0, min_value=0)
+            crop_coord_top = 0  # st.number_input("crop_coords_top", value=0, min_value=0)
+            crop_coord_left = 0  # st.number_input("crop_coords_left", value=0, min_value=0)
 
             value_dict["crop_coords_top"] = crop_coord_top
             value_dict["crop_coords_left"] = crop_coord_left
@@ -526,6 +499,7 @@ def init_embedder_options(keys, init_dict, prompt=None, negative_prompt=None):
             value_dict["target_height"] = init_dict["target_height"]
 
     return value_dict
+
 
 def get_batch(keys, value_dict, N: Union[List, ListConfig], device="cuda"):
     # Hardcoded demo setups; might undergo some changes in the future
@@ -599,7 +573,6 @@ def do_img2img(
     filter=None,
     add_noise=True,
 ):
-    outputs = st.empty()
     precision_scope = autocast
     with torch.no_grad():
         with precision_scope("cuda"):
@@ -633,8 +606,8 @@ def do_img2img(
                 sigmas = sampler.discretization(sampler.num_steps).cuda()
                 sigma = sigmas[0]
 
-                st.info(f"all sigmas: {sigmas}")
-                st.info(f"noising sigma: {sigma}")
+                logging.info(f"all sigmas: {sigmas}")
+                logging.info(f"noising sigma: {sigma}")
                 if offset_noise_level > 0.0:
                     noise = noise + offset_noise_level * append_dims(
                         torch.randn(z.shape[0], device=z.device), z.ndim
@@ -663,10 +636,6 @@ def do_img2img(
 
                 if filter is not None:
                     samples = filter(samples)
-
-                grid = embed_watemark(torch.stack([samples]))
-                grid = rearrange(grid, "n b c h w -> (n h) (b w) c")
-                outputs.image(grid.cpu().numpy())
                 if return_latents:
                     return samples, samples_z
                 return samples
