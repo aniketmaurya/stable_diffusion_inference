@@ -64,5 +64,13 @@ def create_text2image(
             version="2.0",
             **kwargs,
         )
+    
+    elif sd_variant == "sdxl-base-1.0":
+        checkpoint_path = kwargs["checkpoint_path"]
+        model = SDXL(
+            checkpoint_path=checkpoint_path, 
+            version=sd_variant,
+            low_vram=True
+            )
 
     return model
