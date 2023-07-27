@@ -1,11 +1,12 @@
 from .sampling import *
 
 class SDXL:
-    def __init__(self, checkpoint_path:str, version: str="SDXL-base-1.0", mode="txt2img", add_pipeline=False) -> None:
+    def __init__(self, checkpoint_path:str, version: str="SDXL-base-1.0", mode="txt2img", add_pipeline=False, low_vram=False, load_filter=False) -> None:
         """
         version: VERSION2SPECS.keys()
         mode: ("txt2img", "img2img")
         add_pipeline: whether to Load SDXL-refiner
+        load_filter: DeepFloyd filter
         """
         self.checkpoint_path=checkpoint_path
         self.mode = mode
@@ -14,9 +15,14 @@ class SDXL:
         self.version_dict = VERSION2SPECS[version]
         self.version_dict["ckpt"] = checkpoint_path
 
-        self.state = state = init_st(self.version_dict, load_filter=True)
+        self.state = state = init_st(self.version_dict, load_filter=load_filter)
         if state["msg"]:
             st.info(state["msg"])
+
+        self.low_vram = low_vram
+        if low_vram:
+            self.state["model"] = self.state["model"].half()
+
 
     def __call__(self, prompt:str, ):
         state = self.state
