@@ -9,12 +9,12 @@ Simple and easy stable diffusion inference with LightningModule on GPU, CPU and 
 
 | Name     | Variant                          | Image Size |
 |----------|----------------------------------|------------|
+| sdxl-base-1.0 | SDXL 1.0                    | 1024       |
 | sd1      | Stable Diffusion 1.5             | 512        |
 | sd1.5    | Stable Diffusion 1.5             | 512        |
 | sd1.4    | Stable Diffusion 1.4             | 512        |
 | sd2_base | SD 2.0 trained on image size 512 | 512        |
 | sd2_high | SD 2.0 trained on image size 768 | 768        |
-| sdxl-base-1.0 | SDXL 1.0                    | 1024       |
 
 
 ### SDXL
